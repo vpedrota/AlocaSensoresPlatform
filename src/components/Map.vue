@@ -1,12 +1,15 @@
 <template>
     <div id="map" class="map"></div>
+    <modal :open="modal"></modal>
 </template>
 
 <script lang="ts" setup>
 
     // vue js
     import { ref, watch, onMounted, popScopeId } from 'vue';
-    import { defineProps } from 'vue';
+
+    // importando componentes
+    import Modal from '@/components/Modal.vue'
 
     // OpenLayers imports
     import { Style, Fill, Stroke } from 'ol/style';
@@ -18,44 +21,55 @@
     import {OSM, Vector as VectorSource} from 'ol/source.js';
     import {Select} from 'ol/interaction.js';
     import {Tile as TileLayer, Vector as VectorLayer} from 'ol/layer.js';
-
+    import GeoJSON from 'ol/format/GeoJSON';
 
     let map:Map
     let draw:Draw
     let source: VectorSource
     let style: Style
-    let drawnPolygons = new Collection();
     let modify: Modify
     let select: Select
+    let modal:Boolean
 
+    modal = ref(true)
     const props = defineProps({
         geometry: {type: String, required: true},
         removeAll: Boolean
     });
     
     function convertToGeoJSON()  {
-      const features = drawnPolygons.getArray().map(polygon => {
-        return {
-          type: 'Feature',
-          geometry: polygon
-        };
-      });
+      const features = source.getFeatures()
 
       const featureCollection = {
         type: 'FeatureCollection',
         features: features
       };
 
-      console.log(JSON.stringify(featureCollection));
+      const geojsonFormat = new GeoJSON();
+      console.log(geojsonFormat.writeFeaturesObject(features));
     };
 
     watch(() => props.removeAll, (novoValor) => {
         source.clear()
+
     })
+
+    watch(() => source, () => {
+        alert(0)
+     })
 
     watch(() => props.geometry, (novoValor) => {
 
+        if(novoValor == "remover") {
+            map.removeInteraction(modify)
+            map.removeInteraction(draw)
+            select.getFeatures().clear();
+            map.addInteraction(select)
+            return
+        }
+
         if(novoValor == "edicao") {
+            select.getFeatures().clear();
             map.addInteraction(modify)
             map.addInteraction(select)
             map.removeInteraction(draw)
@@ -64,6 +78,7 @@
         map.removeInteraction(select)
         map.removeInteraction(modify)
         map.removeInteraction(draw)
+
         draw = new Draw({
             source,
             type: <Type> novoValor,
@@ -71,9 +86,21 @@
         });
 
         draw.on('drawend', (event) => {
-            drawnPolygons.push(event.feature)
             map.removeInteraction(select)
+            let parser = new GeoJSON();
+            let result = parser.writeFeatures(source.getFeatures());
+            let i
+            let objfeatures = JSON.parse(result)
+            modal.value = !modal.value
+             console.log(objfeatures)
         });
+
+        modify.on('modifystart', function(event) {
+            console.log(3)
+            console.log(select)
+            console.log(event.feature)
+        });
+
 
         map.addInteraction(draw)
     });
@@ -83,7 +110,7 @@
     // Função para inicializar o mapa
     function initializeMap() {
     
-        source = new VectorSource(); // Fonte de dados do polígono
+        source = new VectorSource({wrapX: false}); // Fonte de dados do polígono
         const vectorLayer = new VectorLayer({ source }); // Camada de vetor para exibir o polígono
 
         // Estilo para o polígono desenhado
@@ -113,6 +140,12 @@
         modify = new Modify({ source });        
         select = new Select();
 
+        draw = new Draw({
+            source,
+            type: <Type> props.geometry,
+            style,
+        });
+
         const snap = new Snap({ source });
 
         map = new Map({
@@ -127,18 +160,30 @@
             center: [0, 0],
             zoom: 2,
             }),
-            interactions: [snap, select],
+            interactions: [draw, snap, select],
         });
 
+        draw.on('drawend', (event) => {
+            map.removeInteraction(select)
+            modal.value = !modal.value
+            event.feature.set('id', 0)
+            event.feature.set('população', 0)
+            event.feature.set('impacto', 0)
+            console.log(event.feature)
+        });
 
         select.on('select', function (e) {
-            console.log(e.selected[0])
-            if(e.selected[0] && props.geometry == "edicao"){
-                alert(2)
+            if(e.selected[0] && props.geometry == "remover"){
+                source.removeFeature(e.selected[0])
             }
-        });
-
+        });  
         
+        source.on('change', function(){
+            let parser = new GeoJSON();
+            let result = parser.writeFeatures(source.getFeatures());
+            let objfeatures = JSON.parse(result)
+            console.log(objfeatures)
+        })
     }
 
     onMounted(initializeMap);

@@ -22,7 +22,7 @@
               </v-btn>
             </div>
           </div>
-          <div v-if="buttonsModeSelection[1].isActive">
+          <div v-if="buttonsModeSelection[0].isActive">
             <div class="text-overline mb-1">Selecionar Geometria</div>
             <div class="opcoes">
               <v-btn  variant="tonal" v-for="(button, index) in buttonsGeometrySelection" @click="toggleButton(index, buttonsGeometrySelection)"  :key="index"  :class="{ active: button.isActive }">
@@ -48,7 +48,7 @@
 
 <script lang="ts" setup>  
 
-import { ref, defineEmits } from 'vue';
+import { ref } from 'vue';
 import selectedOptions from '../types/selectedOptions'
 
 interface Button {
@@ -60,14 +60,15 @@ const emit = defineEmits(['nomeDoEvento1', 'removerAllEmit']);
 
 
 const buttonsGeometrySelection= ref<Button[]>([
-  { label: 'Polygon', isActive: false },
+  { label: 'Polygon', isActive: true },
   { label: 'Circle', isActive: false },
   { label: 'Point', isActive: false },
 ]);
 
 const buttonsModeSelection = ref<Button[]>([
-  { label: 'Edição', isActive: true },
-  { label: 'Inserir', isActive: false },
+  { label: 'Inserir', isActive: true },
+  { label: 'Edição', isActive: false },
+  { label: 'Remover', isActive: false },
 ]);
 
 const buttonsSatView = ref<Button[]>([
