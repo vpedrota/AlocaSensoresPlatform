@@ -1,7 +1,25 @@
 <template>
-    <div id="map" class="map"></div>
-    <modal :open="modal"></modal>
+
+     <v-container>
+      <v-row>
+        <v-col cols="12" md="8">
+            <div id="map" class="map"></div><br>
+      </v-col>
+      <v-col cols="12" md="4">
+        <v-row>
+          <v-col cols="12">
+            <MenuOptMap @nomeDoEvento1="handleEvento1" @removerAllEmit="handleRemoveAll"/>
+          </v-col>
+          <v-col cols="12">
+            <FormFeatures :changed="flag" :featuresObjectUpdate="source"></FormFeatures>
+          </v-col>
+        </v-row>
+      </v-col>
+      </v-row>
+    </v-container>
+    <!-- <modal :open="modal"></modal> -->
 </template>
+
 
 <script lang="ts" setup>
 
@@ -10,6 +28,11 @@
 
     // importando componentes
     import Modal from '@/components/Modal.vue'
+    import FormFeatures from '@/components/Form.vue'
+    import MenuOptMap from '@/components/MenuOptionsMap.vue';
+
+    // importando tipos
+    import selectedOptions from '../types/selectedOptions'
 
     // OpenLayers imports
     import { Style, Fill, Stroke } from 'ol/style';
@@ -23,6 +46,10 @@
     import {Tile as TileLayer, Vector as VectorLayer} from 'ol/layer.js';
     import GeoJSON from 'ol/format/GeoJSON';
 
+    
+    let buttonClicked = ref(false)
+    let featuresObject = ref()
+
     let map:Map
     let draw:Draw
     let source: VectorSource
@@ -31,11 +58,75 @@
     let select: Select
     let modal:Boolean
 
+    let geometry:String
+    let flag = ref(true)
+
     modal = ref(true)
-    const props = defineProps({
-        geometry: {type: String, required: true},
-        removeAll: Boolean
+    geometry = "Polygon"
+    
+
+    const emit = defineEmits(['featuresObjectUpdate', 'changed']);
+
+    const handleEvento1 = (dados: selectedOptions) => {
+
+    let array = dados.selectedGeometryOption.value
+    for (let i = 0; i < array.length; i++) {
+        if (array[i].isActive === true) {
+        geometry = array[i].label
+        break;
+        }
+    }
+
+    if(dados.selectedMode.value[1].isActive) {
+        geometry = "edicao"
+        select.getFeatures().clear();
+        map.addInteraction(modify)
+        map.addInteraction(select)
+        map.removeInteraction(draw)
+        return
+    }
+
+    if(dados.selectedMode.value[2].isActive) {
+        geometry = "remover"
+        map.removeInteraction(modify)
+        map.removeInteraction(draw)
+        select.getFeatures().clear();
+        map.addInteraction(select)
+        return
+    }
+
+
+    map.removeInteraction(select)
+    map.removeInteraction(modify)
+    map.removeInteraction(draw)
+
+    draw = new Draw({
+        source,
+        type: geometry,
+        style,
     });
+
+    draw.on('drawend', (event) => {
+    map.removeInteraction(select)
+    modal.value = !modal.value
+    event.feature.set('id', 0)
+    event.feature.set('pop', 0)
+    event.feature.set('impacto', 0)
+    });
+
+    modify.on('modifystart', function(event) {
+        console.log(select)
+        console.log(event.feature)
+    });
+
+
+    map.addInteraction(draw)
+
+    }
+
+    const handleRemoveAll = () => {
+        source.clear()
+    }
     
     function convertToGeoJSON()  {
       const features = source.getFeatures()
@@ -48,63 +139,6 @@
       const geojsonFormat = new GeoJSON();
       console.log(geojsonFormat.writeFeaturesObject(features));
     };
-
-    watch(() => props.removeAll, (novoValor) => {
-        source.clear()
-
-    })
-
-    watch(() => source, () => {
-        alert(0)
-     })
-
-    watch(() => props.geometry, (novoValor) => {
-
-        if(novoValor == "remover") {
-            map.removeInteraction(modify)
-            map.removeInteraction(draw)
-            select.getFeatures().clear();
-            map.addInteraction(select)
-            return
-        }
-
-        if(novoValor == "edicao") {
-            select.getFeatures().clear();
-            map.addInteraction(modify)
-            map.addInteraction(select)
-            map.removeInteraction(draw)
-            return
-        }
-        map.removeInteraction(select)
-        map.removeInteraction(modify)
-        map.removeInteraction(draw)
-
-        draw = new Draw({
-            source,
-            type: <Type> novoValor,
-            style,
-        });
-
-        draw.on('drawend', (event) => {
-            map.removeInteraction(select)
-            let parser = new GeoJSON();
-            let result = parser.writeFeatures(source.getFeatures());
-            let i
-            let objfeatures = JSON.parse(result)
-            modal.value = !modal.value
-             console.log(objfeatures)
-        });
-
-        modify.on('modifystart', function(event) {
-            console.log(3)
-            console.log(select)
-            console.log(event.feature)
-        });
-
-
-        map.addInteraction(draw)
-    });
-
     
     
     // Função para inicializar o mapa
@@ -142,7 +176,7 @@
 
         draw = new Draw({
             source,
-            type: <Type> props.geometry,
+            type: geometry,
             style,
         });
 
@@ -166,14 +200,13 @@
         draw.on('drawend', (event) => {
             map.removeInteraction(select)
             modal.value = !modal.value
-            event.feature.set('id', 0)
-            event.feature.set('população', 0)
-            event.feature.set('impacto', 0)
-            console.log(event.feature)
+            event.feature.set('id', 1)
+            event.feature.set('pop', 1)
+            event.feature.set('impacto', 1)
         });
 
         select.on('select', function (e) {
-            if(e.selected[0] && props.geometry == "remover"){
+            if(e.selected[0] && geometry == "remover"){
                 source.removeFeature(e.selected[0])
             }
         });  
@@ -182,6 +215,9 @@
             let parser = new GeoJSON();
             let result = parser.writeFeatures(source.getFeatures());
             let objfeatures = JSON.parse(result)
+            flag.value=!flag.value
+            emit('featuresObjectUpdate', source);
+            emit('changed', flag);
             console.log(objfeatures)
         })
     }

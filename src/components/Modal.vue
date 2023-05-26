@@ -4,10 +4,10 @@
         <v-dialog v-model="modalOpen" max-width="500px">
           <v-card>
             <v-card-title>
-              <span class="headline">Modal</span>
+              <span class="headline">{{props.titulo}}</span>
             </v-card-title>
             <v-card-text>
-              <p>Conteúdo do modal...</p>
+              <p>{{props.mensagem}}</p>
             </v-card-text>
             <v-card-actions>
               <v-btn color="primary" @click="closeModal">Fechar</v-btn>
@@ -23,6 +23,8 @@
 
   const props = defineProps({
     open: Boolean,
+    titulo: String,
+    mensagem: String
   })
 
   watch(() => props.open, (novoValor) => {
