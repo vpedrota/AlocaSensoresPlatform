@@ -1,5 +1,4 @@
 <template>
-    <v-app>
       <v-container fluid>
         <v-dialog v-model="modalOpen" max-width="500px">
           <v-card>
@@ -15,7 +14,6 @@
           </v-card>
         </v-dialog>
       </v-container>
-    </v-app>
   </template>
   
   <script lang="ts" setup>

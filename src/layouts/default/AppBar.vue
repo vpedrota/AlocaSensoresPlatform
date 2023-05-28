@@ -8,15 +8,15 @@
       {{ navbar.title }}
     </v-app-bar-title>
     <div class="nav-buttons" v-if="navbar.status">
-      <v-btn prepend-icon="mdi-vuetify" variant="tonal" @click="$router.push(item.href)" v-for="item in items">
+      <v-btn variant="tonal" @click="$router.push(item.href)" v-for="item in items">
         {{ item.nome }}
       </v-btn>
       
     </div>
 
     
-      <v-btn prepend-icon="mdi-vuetify" @click="changeToggleState" variant="tonal" v-if="!navbar.status">
-          {{screenWidth}}
+      <v-btn  @click="changeToggleState" variant="tonal" v-if="!navbar.status">
+          Menu
       </v-btn>
     
     
@@ -27,7 +27,7 @@
         location="top"
         temporary>
   <div class="nav-buttons-list">
-    <v-btn prepend-icon="mdi-vuetify" @click="$router.push(item.href)" variant="tonal" v-for="item in items">
+    <v-btn  @click="$router.push(item.href)" variant="tonal" v-for="item in items">
       {{ item.nome }}
     </v-btn>
   </div>

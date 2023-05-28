@@ -10,7 +10,7 @@
         </div>
           <div>
             <div class="view">
-              <v-btn  variant="tonal" v-for="(button, index) in buttonsSatView" @click="toggleButtonOptions(index, buttonsSatView)"  :key="index"  :class="{ active: button.isActive }">
+              <v-btn  variant="tonal" v-for="(button, index) in buttonsSatView" @click="toggleButtonOptionsView(index, buttonsSatView)"  :key="index"  :class="{ active: button.isActive }">
                     {{button.label}}
               </v-btn>
             </div>
@@ -93,7 +93,7 @@ function toggleButton(index: number, buttons: Button[]): void {
   emit('nomeDoEvento1', data);
 }
 
-function toggleButtonOptions(index: number, buttons: Button[]): void {
+function toggleButtonOptionsView(index: number, buttons: Button[]): void {
 
   let option
 
@@ -106,9 +106,7 @@ function toggleButtonOptions(index: number, buttons: Button[]): void {
     
   });
 
-  let data:Button = option;
-
-  emit('changeView', data);
+  emit('changeView', option);
 }
 </script>
 
