@@ -282,6 +282,8 @@
                 if(responseLayer != null)
                     responseLayer.clear()
                 source.removeFeature(e.selected[0])
+                flag.value=!flag.value
+                emit('changed', flag);
             }
         });  
         
