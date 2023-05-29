@@ -67,14 +67,14 @@
     let modify: Modify
     let select: Select
     let modal:Boolean
-    let responseLayer = null 
+    let responseLayer: VectorLayer = null 
     let vector: VectorLayer
     let vector_aloc: VectorLayer
     let source: VectorSource
     let source_aloc: VectorSource
     let geometry:String
-    let modify_aloc
-    let style_aloc
+    let modify_aloc:Modify
+    let style_aloc:Style
     let flag = ref(true)
     let alocao = ref(false)
     let id = 1

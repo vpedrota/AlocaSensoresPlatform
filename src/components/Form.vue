@@ -144,12 +144,22 @@
   function createMultiPointFeature(vectorSource) {
     var features = vectorSource.getFeatures();
     var points = [];
+    var propertiess = []
     features.forEach(function (feature) {
         var centroid = getCentroid(feature.getGeometry());
         points.push(centroid);
+        propertiess.push({"id" : feature.get("id"), "pop": feature.get("pop"), "impacto": feature.get("impacto")})
     });
+
+
     var multiPoint = new MultiPoint(points);
-    return new Feature(multiPoint);
+
+    // Atribua as propriedades atualizadas de volta ao objeto MultiPoint
+    let FeatureNew = new Feature(multiPoint)
+    var properties = FeatureNew.getProperties();
+    properties.novoCampo = propertiess;
+    FeatureNew.setProperties(properties);
+    return FeatureNew ;
 }
 
   watch(() => props.changed, (novoValor: VectorSource) => {
@@ -191,7 +201,7 @@
     console.log(geojson)
 
     axios
-      .post('http://localhost:5000/medianas', geojson)
+      .post('http://localhost:5000/maxcover', geojson)
       .then((response) => {
         console.log(response.data)
         emit('sendResponse', response);
@@ -230,7 +240,7 @@
 
 .custom-table .column-population,
 .custom-table .column-impact {
-  width: 40%;
+  width: 50%;
   border: 1px solid black;
 }
 
@@ -241,12 +251,13 @@
 }
 
 .table-container {
+  border: 1px solid black;
   width: 100%;
   height: 200px; /* Ajuste para o tamanho desejado */
   display: flex;
   flex-direction: row;
   overflow: auto;
-  align-items: center;
+  
 }
 
 .empty {
