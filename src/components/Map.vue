@@ -8,7 +8,7 @@
       <v-col cols="12" md="4">
         <v-row>
           <v-col cols="12">
-            <MenuOptMap @nomeDoEvento1="handleEvento1" @removerAllEmit="handleRemoveAll"/>
+            <MenuOptMap @changeView="changeView" @nomeDoEvento1="handleEvento1" @removerAllEmit="handleRemoveAll"/>
           </v-col>
           <v-col cols="12">
             <FormFeatures :changed="flag" :featuresObjectUpdate="source"></FormFeatures>
@@ -45,8 +45,9 @@
     import {Select} from 'ol/interaction.js';
     import {Tile as TileLayer, Vector as VectorLayer} from 'ol/layer.js';
     import GeoJSON from 'ol/format/GeoJSON';
+    import 'ol/ol.css'
+    import {useGeographic} from 'ol/proj.js';
 
-    
     let buttonClicked = ref(false)
     let featuresObject = ref()
 
@@ -66,6 +67,21 @@
     
 
     const emit = defineEmits(['featuresObjectUpdate', 'changed']);
+
+    const changeView = (tipoMapa: String) => {
+    if (tipoMapa === 'OSM') {
+        map.addLayer(new  TileLayer({
+        source: new OSM() 
+        }));
+        } else{
+            map.addLayer(new TileLayer({
+            source: new Stamen({
+                layer: 'watercolor' 
+            })
+
+        }));
+      }
+    }
 
     const handleEvento1 = (dados: selectedOptions) => {
 
@@ -143,6 +159,8 @@
     
     // Função para inicializar o mapa
     function initializeMap() {
+
+        useGeographic()
     
         source = new VectorSource({wrapX: false}); // Fonte de dados do polígono
         const vectorLayer = new VectorLayer({ source }); // Camada de vetor para exibir o polígono
@@ -191,8 +209,8 @@
             vector,
             ],
             view: new View({
-            center: [0, 0],
-            zoom: 2,
+                center: [-46.6361, -23.5505], // Coordenadas de São Paulo (longitude, latitude)
+                zoom: 12 // Zoom inicial
             }),
             interactions: [draw, snap, select],
         });

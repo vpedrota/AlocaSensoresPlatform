@@ -9,7 +9,7 @@
           <h2>Ferramentas</h2>
         </div>
           <div class="view">
-          <v-btn class="view" variant="tonal" v-for="(button, index) in buttonsSatView" @click="toggleButton(index, buttonsSatView)"  :key="index"  :class="{ active: button.isActive }">
+          <v-btn class="view" variant="tonal" v-for="(button, index) in buttonsSatView" @click="toggleButton(index, buttonsSatView, 'view')"  :key="index"  :class="{ active: button.isActive }">
                 {{button.label}}
           </v-btn>
           <div>
@@ -17,7 +17,7 @@
               Modo 
             </div>
             <div>
-              <v-btn  class="view" v-for="(button, index) in buttonsModeSelection" @click="toggleButton(index, buttonsModeSelection)" :class="{ active: button.isActive }"  variant="tonal">
+              <v-btn  class="view" v-for="(button, index) in buttonsModeSelection" @click="toggleButton(index, buttonsModeSelection, '')" :class="{ active: button.isActive }"  variant="tonal">
                 {{button.label}}
               </v-btn>
             </div>
@@ -25,7 +25,7 @@
           <div v-if="buttonsModeSelection[0].isActive">
             <div class="text-overline mb-1">Selecionar Geometria</div>
             <div class="opcoes">
-              <v-btn  variant="tonal" v-for="(button, index) in buttonsGeometrySelection" @click="toggleButton(index, buttonsGeometrySelection)"  :key="index"  :class="{ active: button.isActive }">
+              <v-btn  variant="tonal" v-for="(button, index) in buttonsGeometrySelection" @click="toggleButton(index, buttonsGeometrySelection, '')"  :key="index"  :class="{ active: button.isActive }">
                 {{button.label}}
               </v-btn>
             </div>
@@ -56,7 +56,7 @@ interface Button {
   isActive: boolean;
 }
 
-const emit = defineEmits(['nomeDoEvento1', 'removerAllEmit']);
+const emit = defineEmits(['nomeDoEvento1', 'removerAllEmit', 'changeView']);
 
 
 const buttonsGeometrySelection= ref<Button[]>([
@@ -76,7 +76,8 @@ const buttonsSatView = ref<Button[]>([
   { label: 'OSM', isActive: false },
 ]);
 
-function toggleButton(index: number, buttons: Button[] ): void {
+function toggleButton(index: number, buttons: Button[], nome: String): void {
+
   buttons.forEach((button, i) => {
     button.isActive = i === index;
   });
@@ -87,8 +88,12 @@ function toggleButton(index: number, buttons: Button[] ): void {
     "selectedGeometryOption": buttonsGeometrySelection 
   }
 
-  emit('nomeDoEvento1', data);
+  if(nome == "view")
+    emit('changeView', "asf");
+  else
+    emit('nomeDoEvento1', data);
 }
+
 
 
 </script>
