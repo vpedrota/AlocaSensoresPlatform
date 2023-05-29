@@ -41,7 +41,7 @@
     import Collection from 'ol/Collection.js';
     import View from 'ol/View.js';
     import {Draw, Modify, Snap} from 'ol/interaction.js';
-    import {OSM, Vector as VectorSource} from 'ol/source.js';
+    import {OSM, Stamen,  Vector as VectorSource} from 'ol/source.js';
     import {Select} from 'ol/interaction.js';
     import {Tile as TileLayer, Vector as VectorLayer} from 'ol/layer.js';
     import GeoJSON from 'ol/format/GeoJSON';
@@ -68,21 +68,21 @@
 
     const emit = defineEmits(['featuresObjectUpdate', 'changed']);
 
-    const changeView = (tipoMapa: String) => {
-    if (tipoMapa === 'OSM') {
-        map.addLayer(new  TileLayer({
-        source: new OSM() 
-        }));
+    const changeView = (dado) => {
+        let tipoMapa = dado.label
+        if (tipoMapa === 'OSM') {
+            map.addLayer(new  TileLayer({
+            source: new OSM() 
+            }));
         } else{
-            map.addLayer(new TileLayer({
-            source: new Stamen({
-                layer: 'watercolor' 
-            })
+        map.addLayer(new TileLayer({
+          source: new Stamen({
+              layer: 'watercolor' 
+          })
 
         }));
       }
     }
-
     const handleEvento1 = (dados: selectedOptions) => {
 
     let array = dados.selectedGeometryOption.value

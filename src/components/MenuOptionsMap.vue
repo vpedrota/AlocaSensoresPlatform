@@ -8,16 +8,18 @@
         <div class="text-overline mb-1">
           <h2>Ferramentas</h2>
         </div>
-          <div class="view">
-          <v-btn class="view" variant="tonal" v-for="(button, index) in buttonsSatView" @click="toggleButton(index, buttonsSatView, 'view')"  :key="index"  :class="{ active: button.isActive }">
-                {{button.label}}
-          </v-btn>
+          <div>
+            <div class="view">
+              <v-btn  variant="tonal" v-for="(button, index) in buttonsSatView" @click="toggleButtonOptions(index, buttonsSatView)"  :key="index"  :class="{ active: button.isActive }">
+                    {{button.label}}
+              </v-btn>
+            </div>
           <div>
             <div class="text-overline mb-1">
               Modo 
             </div>
-            <div>
-              <v-btn  class="view" v-for="(button, index) in buttonsModeSelection" @click="toggleButton(index, buttonsModeSelection, '')" :class="{ active: button.isActive }"  variant="tonal">
+            <div class="view">
+              <v-btn  v-for="(button, index) in buttonsModeSelection" @click="toggleButton(index, buttonsModeSelection)" :class="{ active: button.isActive }"  variant="tonal">
                 {{button.label}}
               </v-btn>
             </div>
@@ -25,7 +27,7 @@
           <div v-if="buttonsModeSelection[0].isActive">
             <div class="text-overline mb-1">Selecionar Geometria</div>
             <div class="opcoes">
-              <v-btn  variant="tonal" v-for="(button, index) in buttonsGeometrySelection" @click="toggleButton(index, buttonsGeometrySelection, '')"  :key="index"  :class="{ active: button.isActive }">
+              <v-btn  variant="tonal" v-for="(button, index) in buttonsGeometrySelection" @click="toggleButton(index, buttonsGeometrySelection)"  :key="index"  :class="{ active: button.isActive }">
                 {{button.label}}
               </v-btn>
             </div>
@@ -72,11 +74,11 @@ const buttonsModeSelection = ref<Button[]>([
 ]);
 
 const buttonsSatView = ref<Button[]>([
-  { label: 'Satélite', isActive: true },
-  { label: 'OSM', isActive: false },
+  { label: 'Satélite', isActive: false },
+  { label: 'OSM', isActive: true },
 ]);
 
-function toggleButton(index: number, buttons: Button[], nome: String): void {
+function toggleButton(index: number, buttons: Button[]): void {
 
   buttons.forEach((button, i) => {
     button.isActive = i === index;
@@ -88,20 +90,34 @@ function toggleButton(index: number, buttons: Button[], nome: String): void {
     "selectedGeometryOption": buttonsGeometrySelection 
   }
 
-  if(nome == "view")
-    emit('changeView', "asf");
-  else
-    emit('nomeDoEvento1', data);
+  emit('nomeDoEvento1', data);
 }
 
+function toggleButtonOptions(index: number, buttons: Button[]): void {
 
+  let option
 
+  buttons.forEach((button, i) => {
+    
+    button.isActive = i === index;
+    if(i === index){
+      option = buttons[i]
+    }
+    
+  });
+
+  let data:Button = option;
+
+  emit('changeView', data);
+}
 </script>
 
 
 <style>
 
 .view{
+  display: flex;
+  column-gap: 5px;
   margin-left: 5px;
 }
 
@@ -117,8 +133,10 @@ function toggleButton(index: number, buttons: Button[], nome: String): void {
 
 .opcoes{
   display: flex;
+  row-gap: 5px;
   column-gap: 5px;
   margin-bottom: 5px;
+  margin-top: 5px
 }
 
 .active{
