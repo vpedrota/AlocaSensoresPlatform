@@ -189,10 +189,11 @@
     var geojson = format.writeFeaturesObject([multiPointFeature1, multiPointFeature2]);
     geojson.features[1].properties =  { p: selecao.value };
     console.log(geojson)
-    
+
     axios
-      .post('http://localhost:80', geojson)
+      .post('http://localhost:5000/medianas', geojson)
       .then((response) => {
+        console.log(response.data)
         emit('sendResponse', response);
       })
       .catch((error) => {
@@ -242,9 +243,10 @@
 .table-container {
   width: 100%;
   height: 200px; /* Ajuste para o tamanho desejado */
+  display: flex;
+  flex-direction: row;
   overflow: auto;
   align-items: center;
-  justify-content: center;
 }
 
 .empty {
