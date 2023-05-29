@@ -32,6 +32,14 @@
               </v-btn>
             </div>
           </div>
+          <div v-if="buttonsModeSelection[0].isActive">
+            <div class="text-overline mb-1">Selecionar tipo do ponto</div>
+            <div class="opcoes">
+              <v-btn  variant="tonal" v-for="(button, index) in buttonsPointType" @click="toggleButtonPointType(index, buttonsPointType)"  :key="index"  :class="{ active: button.isActive }">
+                {{button.label}}
+              </v-btn>
+            </div>
+          </div>
           <div>
             <div class="text-overline mb-1">
               Remover
@@ -58,7 +66,7 @@ interface Button {
   isActive: boolean;
 }
 
-const emit = defineEmits(['nomeDoEvento1', 'removerAllEmit', 'changeView']);
+const emit = defineEmits(['nomeDoEvento1', 'removerAllEmit', 'changeView', 'changePointType']);
 
 
 const buttonsGeometrySelection= ref<Button[]>([
@@ -71,6 +79,11 @@ const buttonsModeSelection = ref<Button[]>([
   { label: 'Inserir', isActive: true },
   { label: 'Edição', isActive: false },
   { label: 'Remover', isActive: false },
+]);
+
+const buttonsPointType = ref<Button[]>([
+  { label: 'Demanda', isActive: true },
+  { label: 'Alocação', isActive: false },
 ]);
 
 const buttonsSatView = ref<Button[]>([
@@ -107,6 +120,20 @@ function toggleButtonOptionsView(index: number, buttons: Button[]): void {
   });
 
   emit('changeView', option);
+}
+
+function toggleButtonPointType (index: number, buttons: Button[]): void {
+
+  let option
+
+  buttons.forEach((button, i) => {
+    button.isActive = i === index;
+    if(i === index){
+      option = buttons[i]
+    } 
+  });
+
+  emit('changePointType', option);
 }
 </script>
 

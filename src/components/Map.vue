@@ -1,5 +1,13 @@
 <template>
+    <!-- <v-container>
+        <div id="meuDiv" style="background-color: #3399CC">
+            <MenuOptMap @changePointType="changePointType" @changeView="changeView" @nomeDoEvento1="handleEvento1" @removerAllEmit="handleRemoveAll"/>
+            <br>
+            <FormFeatures @sendResponse="sendResponse" :changed="flag" :featuresObjectUpdate="source" :featuresObjectUpdate2="source_aloc"></FormFeatures>
+        </div>
 
+        <div id="map"></div> -->
+    <!-- </v-container> -->
      <v-container>
       <v-row>
         <v-col cols="12" md="8">
@@ -8,10 +16,10 @@
       <v-col cols="12" md="4">
         <v-row>
           <v-col cols="12">
-            <MenuOptMap @changeView="changeView" @nomeDoEvento1="handleEvento1" @removerAllEmit="handleRemoveAll"/>
+            <MenuOptMap @changePointType="changePointType" @changeView="changeView" @nomeDoEvento1="handleEvento1" @removerAllEmit="handleRemoveAll"/>
           </v-col>
           <v-col cols="12">
-            <FormFeatures @sendResponse="sendResponse" :changed="flag" :featuresObjectUpdate="source"></FormFeatures>
+            <FormFeatures @sendResponse="sendResponse" :changed="flag" :featuresObjectUpdate="source" :featuresObjectUpdate2="source_aloc"></FormFeatures>
           </v-col>
         </v-row>
       </v-col>
@@ -54,23 +62,85 @@
 
     let map:Map
     let draw:Draw
-    let source: VectorSource
+    
     let style: Style
     let modify: Modify
     let select: Select
     let modal:Boolean
+    let responseLayer = null 
     let vector: VectorLayer
-    let responseLayer = null
-
+    let vector_aloc: VectorLayer
+    let source: VectorSource
+    let source_aloc: VectorSource
     let geometry:String
+    let modify_aloc
+    let style_aloc
     let flag = ref(true)
-
+    let alocao = ref(false)
     let id = 1
     modal = ref(true)
-    geometry = "Polygon"
+    geometry = ref("Polygon")
     
 
     const emit = defineEmits(['featuresObjectUpdate', 'changed']);
+    
+    function changeMapOptions(){
+        if(geometry.value == "edição"){
+            select.getFeatures().clear();
+            map.addInteraction(modify)
+            map.addInteraction(modify_aloc)
+            map.addInteraction(select)
+            map.removeInteraction(draw)
+            return
+        }
+        
+        if(geometry.value == "remover"){
+            map.removeInteraction(modify)
+            map.removeInteraction(modify_aloc)
+            map.removeInteraction(draw)
+            select.getFeatures().clear();
+            map.addInteraction(select) 
+            return
+        }
+
+        map.removeInteraction(select)
+        map.removeInteraction(modify)
+        map.removeInteraction(modify_aloc)
+        map.removeInteraction(draw)
+      
+        if(!alocao.value){
+            draw = new Draw({
+                source,
+                type: geometry.value,
+                style,
+            });
+        } else{
+            draw = new Draw({
+                source: source_aloc,
+                type: geometry.value,
+                style: style_aloc,
+            });
+
+        }
+
+        draw.on('drawend', (event) => {
+            map.removeInteraction(select)
+            if(responseLayer != null)
+                responseLayer.clear()
+            modal.value = !modal.value
+            event.feature.set('id', id)
+            event.feature.set('pop', 1)
+            event.feature.set('impacto', 1)
+            id += 1
+        });
+
+        map.addInteraction(draw)
+    }
+
+    const changePointType= (option) => {
+        alocao.value = option.label === "Alocação"
+        changeMapOptions()
+    }
 
     const sendResponse = (response) => {
 
@@ -111,7 +181,8 @@
                 new  TileLayer({
                     source: new OSM() 
                 }),
-                vector
+                vector,
+                vector_aloc
             ]
             });
            
@@ -123,7 +194,8 @@
             source: new Stamen({
                 layer: 'watercolor' 
             })}),
-                vector
+                vector,
+                vector_aloc
             ]
             });
                   
@@ -136,58 +208,20 @@
         let array = dados.selectedGeometryOption.value
         for (let i = 0; i < array.length; i++) {
             if (array[i].isActive === true) {
-            geometry = array[i].label
-            break;
+                geometry.value = array[i].label 
+                break;
             }
         }
 
-        if(dados.selectedMode.value[1].isActive) {
-            geometry = "edicao"
-            select.getFeatures().clear();
-            map.addInteraction(modify)
-            map.addInteraction(select)
-            map.removeInteraction(draw)
-            return
+        if(dados.selectedMode.value[1].isActive){
+            geometry.value = "edição"
+            return 
         }
 
-        if(dados.selectedMode.value[2].isActive) {
-            geometry = "remover"
-            map.removeInteraction(modify)
-            map.removeInteraction(draw)
-            select.getFeatures().clear();
-            map.addInteraction(select)
-            return
+        if(dados.selectedMode.value[2].isActive){
+            geometry.value = "remover"
+            return 
         }
-
-
-        map.removeInteraction(select)
-        map.removeInteraction(modify)
-        map.removeInteraction(draw)
-
-        draw = new Draw({
-            source,
-            type: geometry,
-            style,
-        });
-
-        draw.on('drawend', (event) => {
-            map.removeInteraction(select)
-            if(responseLayer != null)
-                responseLayer.clear()
-            modal.value = !modal.value
-            event.feature.set('id', id)
-            event.feature.set('pop', 1)
-            event.feature.set('impacto', 1)
-            id += 1
-        });
-
-        modify.on('modifystart', function(event) {
-            if(responseLayer != null)
-                responseLayer.clear()
-        });
-
-
-        map.addInteraction(draw)
 
     }
 
@@ -195,28 +229,13 @@
         if(responseLayer != null)
             responseLayer.clear()
         source.clear()
+        source_aloc.clear()
     }
-    
-    function convertToGeoJSON()  {
-      const features = source.getFeatures()
-
-
-      const featureCollection = {
-        type: 'FeatureCollection',
-        features: features
-      };
-
-      const geojsonFormat = new GeoJSON();
-      console.log(geojsonFormat.writeFeaturesObject(features));
-    };
        
-    // Função para inicializar o mapa
     function initializeMap() {
 
         useGeographic()
     
-        source = new VectorSource({wrapX: false}); // Fonte de dados do polígono
-        const vectorLayer = new VectorLayer({ source }); // Camada de vetor para exibir o polígono
 
         // Estilo para o polígono desenhado
         style = new Style({
@@ -229,7 +248,20 @@
             }),
         });
 
+        style_aloc = new Style({
+            fill: new Fill({
+            color: 'rgba(0, 255, 0, 1)',
+            }),
+            stroke: new Stroke({
+            color: '#ff99CC',
+            width: 2,
+            }),
+        });
+        
+        source = new VectorSource({wrapX: false}); // Fonte de dados do polígono
+        source_aloc = new VectorSource({wrapX: false}); // Fonte de dados do polígono
 
+        // Utilizado para inserir os pontos de demanda
         vector = new VectorLayer({
             source: source,
             style: {
@@ -241,32 +273,31 @@
             },
         });
 
+        // Utilizado para inserir os pontos de alocação
+        vector_aloc = new VectorLayer({
+            source: source_aloc,
+            style: {
+                'fill-color': 'rgba(0, 255, 255, 1)',
+                'stroke-color': '#ffccff',
+                'stroke-width': 2,
+                'circle-radius': 7,
+                'circle-fill-color': '#00ccff',
+            },
+        });
+
         
-        modify = new Modify({ source });        
+        modify = new Modify({ source }); 
+        modify_aloc = new Modify({ source: source_aloc });           
+        
         select = new Select();
 
         draw = new Draw({
             source,
-            type: geometry,
+            type: geometry.value,
             style,
         });
 
         const snap = new Snap({ source });
-
-        map = new Map({
-            target: 'map',
-            layers: [
-            new TileLayer({
-                source: new OSM(),
-            }),
-            vector,
-            ],
-            view: new View({
-                center: [-46.6361, -23.5505],
-                zoom: 12 
-            }),
-            interactions: [draw, snap, select],
-        });
 
         draw.on('drawend', (event) => {
             map.removeInteraction(select)
@@ -278,10 +309,13 @@
         });
 
         select.on('select', function (e) {
+            
             if(e.selected[0] && geometry == "remover"){
                 if(responseLayer != null)
                     responseLayer.clear()
+               
                 source.removeFeature(e.selected[0])
+                source_aloc.removeFeature(e.selected[0])
                 flag.value=!flag.value
                 emit('changed', flag);
             }
@@ -296,17 +330,60 @@
             emit('changed', flag);
             console.log(objfeatures)
         })
+
+        map = new Map({
+            target: 'map',
+            layers: [
+            new TileLayer({
+                source: new OSM(),
+            }),
+            vector,
+            vector_aloc,
+            ],
+            view: new View({
+                center: [-46.6361, -23.5505],
+                zoom: 12 
+            }),
+            interactions: [draw, snap, select],
+        });
+
+        modify.on('modifystart', function(event) {
+            if(responseLayer != null)
+                responseLayer.clear()
+        });
+
+        modify_aloc.on('modifystart', function(event) {
+            if(responseLayer != null)
+                responseLayer.clear()
+        });
+
     }
+
+    watch( () => geometry.value, (newOption) => {
+        changeMapOptions()
+    },{ deep: true})
 
     onMounted(initializeMap);
 </script>
 
 <style>
 
+/* #meuDiv {
+    position: absolute;
+    top: 70px; 
+    right: 100px; 
+    z-index: 100; 
+}
+
+#map {
+    position: relative;
+    width: 100%;
+    height: 90vh;
+} */
+
 #map{
   height: 70vh;
   max-height: 800px;
   width: 100%;
 }
-
 </style>
