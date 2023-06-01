@@ -256,7 +256,6 @@
 }
 
 .custom-input {
-  color: white;
   height: 35px !important;
   border-bottom: none !important;
 }
