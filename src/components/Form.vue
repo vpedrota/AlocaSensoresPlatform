@@ -201,7 +201,7 @@
     console.log(geojson)
 
     axios
-      .post('http://localhost:5000/maxcover', geojson)
+      .post('https://alocasensoresplatformapinew-upfpc35ezq-rj.a.run.app/maxcover', geojson)
       .then((response) => {
         console.log(response.data)
         emit('sendResponse', response);
