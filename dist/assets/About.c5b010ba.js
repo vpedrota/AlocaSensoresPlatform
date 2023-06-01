@@ -1,0 +1,1 @@
+import{_ as e}from"./_plugin-vue_export-helper.cdc0426e.js";import{G as o,H as r}from"./index.cea91902.js";const t={};function c(n,s){return o(),r("h1",null,"ss")}const f=e(t,[["render",c]]);export{f as default};
