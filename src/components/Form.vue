@@ -97,7 +97,7 @@
   let lista = ref<number[]>([]);
   let selecao = ref<number | undefined>();
   let selecaoModelos = ref<string | undefined>();
-  let modelos = ['P-Medianas'];
+  let modelos = ['MCLP','P-Medianas'];
 
   const emit = defineEmits(['sendResponse']);
 
@@ -199,7 +199,7 @@
     var geojson = format.writeFeaturesObject([multiPointFeature1, multiPointFeature2]);
     geojson.features[1].properties =  { p: selecao.value };
     console.log(geojson)
-
+    if(selecaoModelos.value == "MCLP"){
     axios
       .post('https://alocasensoresplatformapinew-upfpc35ezq-rj.a.run.app/maxcover', geojson)
       .then((response) => {
@@ -209,6 +209,17 @@
       .catch((error) => {
         console.error(error);
       });
+    } else{
+       axios
+      .post('https://alocasensoresplatformapinew-upfpc35ezq-rj.a.run.app/medianas', geojson)
+      .then((response) => {
+        console.log(response.data)
+        emit('sendResponse', response);
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+    }
   }
 </script>
 
