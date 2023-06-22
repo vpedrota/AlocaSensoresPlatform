@@ -238,7 +238,7 @@
     console.log(geojson)
     if(selecaoModelos.value == "MCLP"){
     axios
-      .post('https://alocasensoresplatformapinew-upfpc35ezq-rj.a.run.app/maxcover', geojson)
+      .post('https://alocasensoresplatformapi-upfpc35ezq-rj.a.run.app/maxcover', geojson)
       .then((response) => {
         console.log(response.data)
         emit('sendResponse', response);
@@ -248,7 +248,7 @@
       });
     } else{
        axios
-      .post('https://alocasensoresplatformapinew-upfpc35ezq-rj.a.run.app/medianas', geojson)
+      .post('https://alocasensoresplatformapi-upfpc35ezq-rj.a.run.app/medianas', geojson)
       .then((response) => {
         console.log(response.data)
         emit('sendResponse', response);
