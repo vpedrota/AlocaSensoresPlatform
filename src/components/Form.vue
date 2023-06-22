@@ -68,6 +68,7 @@
 
       <div style="margin-top: 10px; display: flex; column-gap: 5px">
         <v-btn @click="sendToApi()" variant="tonal">Enviar</v-btn>
+        <v-btn @click="download()" variant="tonal">Baixar</v-btn>
       </div>
     </v-card-item>
   </v-card>
@@ -78,7 +79,7 @@
   import { ref, watch, defineProps, defineEmits } from 'vue';
   import { OSM, Vector as VectorSource } from 'ol/source.js';
   import GeoJSON from 'ol/format/GeoJSON';
-  import { transform } from 'ol/proj';
+  import Map from 'ol/Map.js';
   import Feature from 'ol/Feature.js';
   import Polygon from 'ol/geom/Polygon.js';
   import Point from 'ol/geom/Point.js';
@@ -99,7 +100,7 @@
   let selecaoModelos = ref<string | undefined>();
   let modelos = ['MCLP','P-Medianas'];
 
-  const emit = defineEmits(['sendResponse']);
+  const emit = defineEmits(['sendResponse', 'download']);
 
   const props = defineProps({
     featuresObjectUpdate: {
@@ -109,6 +110,10 @@
     featuresObjectUpdate2: {
       type: VectorSource,
       required: true,
+    },
+    map:{
+      type:Map,
+      required:true
     },
     changed: Boolean,
   });
@@ -162,6 +167,11 @@
     return FeatureNew ;
 }
 
+  watch(() =>props.changed, (novoValor: VectorSource) => {
+    const tamanhoLista = props.featuresObjectUpdate2.getFeatures().length;
+    lista.value = Array.from({ length: tamanhoLista }, (_, index) => index + 1);
+  })
+
   watch(() => props.changed, (novoValor: VectorSource) => {
     tableData.value = props.featuresObjectUpdate.getFeatures().map((feature) => ({
       id: feature.get('id'),
@@ -169,11 +179,38 @@
       impacto: feature.get('impacto'),
     }));
 
-    tableData.value.sort((a, b) => a.id - b.id);
-    const tamanhoLista = tableData.value.length;
+    //tableData.value.sort((a, b) => a.id - b.id);
+    const tamanhoLista = props.featuresObjectUpdate2.getFeatures().length;
     lista.value = Array.from({ length: tamanhoLista }, (_, index) => index + 1);
     console.log(tamanhoLista);
   });
+
+
+
+  function download(): void{
+
+    
+
+    if (!verificaVazio()) {
+      modal.value = !modal.value;
+      return;
+    }
+
+    if (selecao.value === undefined) {
+      modal.value = !modal.value;
+      mensagem.value = 'Escolha uma quantidade de pontos';
+      return;
+    }
+
+    if (selecaoModelos.value === undefined) {
+      modal.value = !modal.value;
+      mensagem.value = 'Escolha um modelo para o cálculo';
+      return;
+    }
+    
+    emit('download', 1);
+
+  }
 
   function sendToApi(): void {
     if (!verificaVazio()) {

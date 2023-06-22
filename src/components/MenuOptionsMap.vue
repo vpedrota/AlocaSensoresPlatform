@@ -10,7 +10,7 @@
         </div>
           <div>
             <div class="view">
-              <v-btn  variant="tonal" v-for="(button, index) in buttonsSatView" @click="toggleButtonOptionsView(index, buttonsSatView)"  :key="index"  :class="{ active: button.isActive }">
+              <v-btn variant="tonal"   v-for="(button, index) in buttonsSatView" @click="toggleButtonOptionsView(index, buttonsSatView)"  :disabled="isButtonDisabled(index) " :key="index"  :class="{ active: button.isActive }">
                     {{button.label}}
               </v-btn>
             </div>
@@ -87,9 +87,13 @@ const buttonsPointType = ref<Button[]>([
 ]);
 
 const buttonsSatView = ref<Button[]>([
-  { label: 'Satélite', isActive: false },
+  { label: 'Satélite', isActive: false},
   { label: 'OSM', isActive: true },
 ]);
+
+function  isButtonDisabled(index:number) {
+    return index == 0
+}
 
 function toggleButton(index: number, buttons: Button[]): void {
 

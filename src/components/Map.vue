@@ -19,7 +19,7 @@
             <MenuOptMap @changePointType="changePointType" @changeView="changeView" @nomeDoEvento1="handleEvento1" @removerAllEmit="handleRemoveAll"/>
           </v-col>
           <v-col cols="12">
-            <FormFeatures @sendResponse="sendResponse" :changed="flag" :featuresObjectUpdate="source" :featuresObjectUpdate2="source_aloc"></FormFeatures>
+            <FormFeatures @sendResponse="sendResponse" @download="download" :changed="flag" :featuresObjectUpdate="source" :featuresObjectUpdate2="source_aloc"></FormFeatures>
           </v-col>
         </v-row>
       </v-col>
@@ -56,6 +56,7 @@
     import 'ol/ol.css'
     import {Group as LayerGroup} from 'ol/layer.js';
     import {useGeographic} from 'ol/proj.js';
+import { GeometryCollection } from 'ol/geom';
 
     let buttonClicked = ref(false)
     let featuresObject = ref()
@@ -82,7 +83,7 @@
     geometry = ref("Polygon")
     
 
-    const emit = defineEmits(['featuresObjectUpdate', 'changed']);
+    const emit = defineEmits(['featuresObjectUpdate', 'featuresObjectUpdate2', 'changed']);
     
     function changeMapOptions(){
         if(geometry.value == "edição"){
@@ -140,6 +141,98 @@
     const changePointType= (option) => {
         alocao.value = option.label === "Alocação"
         changeMapOptions()
+    }
+
+    const download = (response) => { 
+        var features_layer = []; // Array para armazenar as geometrias
+  
+        // Itere sobre as geometrias na camada desejada e adicione-as ao array de features
+        map.getLayers().forEach(function(layer) {
+            let new_layer = []
+            if (layer instanceof VectorLayer) {
+                layer.getSource().forEachFeature(function(feature) {
+                    new_layer.push(feature);
+                });
+                features_layer.push(new_layer)
+            }
+        });
+
+        let result = []
+        var geoJSONFormat = new GeoJSON();
+
+        features_layer.forEach(function(layer){
+
+            var geojsonObject = {
+            type: 'FeatureCollection',
+            features: layer.map(function(feature) {
+            var geometry = geoJSONFormat.writeFeatureObject(feature);
+            var properties = feature.getProperties();
+            return geometry  
+            })
+
+        };
+        
+        result.push(geojsonObject)
+
+        })
+
+        let geometry_collection_array = []
+
+        result.forEach(function(featureCollection){
+            let newGeometryCollection =      []
+
+            featureCollection.features.forEach(function(f){
+                newGeometryCollection.push(f.geometry)
+            })
+
+            geometry_collection_array.push(newGeometryCollection)
+        })
+
+        // Crie um objeto GeoJSON com as features
+        console.log(geometry_collection_array)
+
+        var geojsonObject = {
+            type: 'FeatureCollection',
+            features: []
+        }
+
+        let abc = []
+        geometry_collection_array.forEach(function(geoCollection){
+
+            var geomCol = {
+                type: 'Feature',
+                properties: {},
+                geometry: {
+                    type:"GeometryCollection",
+                    geometries: 
+                        geoCollection.map(function(feature){
+                            return feature
+                        })
+                    
+                }
+
+            }
+
+            geojsonObject.features.push(geomCol)
+
+        })
+        
+        console.log(geojsonObject)
+        // Converta o objeto GeoJSON em uma string
+        var geojsonString = JSON.stringify(geojsonObject, null, 2);
+        
+        // Crie um blob a partir da string GeoJSON
+        var blob = new Blob([geojsonString], { type: 'application/json' });
+        var url = URL.createObjectURL(blob);
+        
+        // Crie um elemento de link e acione o clique programaticamente para iniciar o download
+        var link = document.createElement('a');
+        link.href = url;
+        link.download = 'geometries.geojson';
+        link.click();
+        
+        // Limpe o URL do objeto para liberar memória
+        URL.revokeObjectURL(url);
     }
 
     const sendResponse = (response) => {
@@ -327,8 +420,13 @@
             let objfeatures = JSON.parse(result)
             flag.value=!flag.value
             emit('featuresObjectUpdate', source);
+            emit('featuresObjectUpdate2', source_aloc);
             emit('changed', flag);
-            console.log(objfeatures)
+        })
+
+        source_aloc.on('change', function(){
+            flag.value=!flag.value
+            emit('changed', flag);
         })
 
         map = new Map({
@@ -356,6 +454,7 @@
             if(responseLayer != null)
                 responseLayer.clear()
         });
+
 
     }
 
